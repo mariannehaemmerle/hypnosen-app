@@ -3,137 +3,232 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hypnosen App</title>
+  <title>Hypnosen App – Journal & Emotions-Ampel</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" type="image/png" />
   <meta name="theme-color" content="#d4af37" />
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-      color: #333;
-    }
-    header {
-      background: #d4af37;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-    main {
-      padding: 1rem;
-      max-width: 800px;
-      margin: auto;
-    }
-    .video {
-      margin-bottom: 1.5rem;
-    }
-    iframe {
-      width: 100%;
-      height: 200px;
-      border: none;
-    }
-    .note-section {
-      margin-top: 2rem;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      padding: 0.5rem;
-    }
-    button {
-      background: #d4af37;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      margin-top: 0.5rem;
-    }
-    button:hover {
-      background: #b38f2e;
-    }
-    ul {
-      padding: 0;
-      list-style: none;
-    }
-    li {
-      background: white;
-      padding: 0.5rem;
-      margin-bottom: 0.5rem;
-      border: 1px solid #ddd;
-    }
+    :root { --gold:#d4af37; --ink:#1b180e; --bg:#f9f9f9; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:#2b2b2b; }
+    header { background: var(--gold); color: #fff; padding: 16px; text-align:center; }
+    header h1 { margin: 0; font-size: 22px; }
+    main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+    .card { background:#fff; border:1px solid #e8e3d2; border-radius: 12px; padding: 16px; }
+
+    /* Video-Liste */
+    .videos { display:grid; gap:12px; }
+    @media (min-width:720px){ .videos { grid-template-columns: 1fr 1fr; } }
+    .video { display:flex; gap:12px; align-items:center; border:1px solid #eee; border-radius:12px; overflow:hidden; background:#fff; }
+    .thumb { width:160px; height:90px; object-fit:cover; background:#000; border-right:1px solid #eee; }
+    .video h3 { margin:0 0 6px 0; font-size:16px; }
+    .video a.btn { display:inline-block; padding:8px 12px; background:var(--gold); color:#fff; border-radius:8px; text-decoration:none; font-weight:700; }
+    .embed { position:relative; padding-top:56.25%; border-radius:12px; overflow:hidden; border:1px solid #eee; background:#0001; }
+    .embed iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+    /* Emotions-Ampel */
+    .ampel { display: grid; gap: 12px; }
+    .ampel-buttons { display:flex; gap:10px; flex-wrap:wrap; }
+    .ampel-btn { flex:1 1 120px; padding:10px; border:0; border-radius:10px; color:#111; font-weight:700; cursor:pointer }
+    .ampel-btn.red   { background:#ffdfdf; }
+    .ampel-btn.yellow{ background:#fff5cc; }
+    .ampel-btn.green { background:#dff7df; }
+    .ampel-status { display:flex; align-items:center; gap:10px; }
+    .dot { width:14px; height:14px; border-radius:50%; display:inline-block; border:1px solid #bbb }
+    .dot.red { background:#ff5a5a; }
+    .dot.yellow { background:#f8cf3a; }
+    .dot.green { background:#44c767; }
+    .ampel-history { display:flex; gap:8px; flex-wrap:wrap; }
+    .badge { padding:6px 10px; border-radius:12px; background:#f1f1f1; font-size:12px; display:flex; align-items:center; }
+    .badge .dot { margin-right:6px; }
+
+    /* Notizen */
+    textarea { width:100%; min-height:100px; padding:10px; border:1px solid #ddd; border-radius:10px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; background:var(--gold); color:#fff; border:0; border-radius:10px; font-weight:700; cursor:pointer; }
+    .btn.secondary { background:#fff; color:#333; border:1px solid #ddd; }
+    ul.notes { list-style:none; padding:0; margin:12px 0 0 0; display:grid; gap:8px; }
+    ul.notes li { background:#fff; border:1px solid #eee; border-radius:10px; padding:10px; display:grid; gap:6px; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .muted { color:#666; font-size:12px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Meine Hypnosen</h1>
-  </header>
-  <main>
-    <section id="videos"></section>
+  <header><h1>Hypnosen • Journal • Emotions-Ampel</h1></header>
 
-    <section class="note-section">
-      <h2>Notizen</h2>
-      <textarea id="noteInput" placeholder="Deine Gedanken hier..."></textarea>
-      <br />
-      <button onclick="addNote()">Notiz speichern</button>
-      <ul id="notesList"></ul>
+  <main>
+    <!-- Emotions-Ampel -->
+    <section class="card ampel" id="ampel">
+      <h2>Emotions-Ampel</h2>
+      <div class="ampel-status">
+        <span class="dot" id="ampelDot"></span>
+        <strong id="ampelLabel">Noch nichts erfasst</strong>
+      </div>
+      <div class="ampel-buttons">
+        <button class="ampel-btn red"    onclick="setMood('red')">😟 Rot – belastet</button>
+        <button class="ampel-btn yellow" onclick="setMood('yellow')">😐 Gelb – neutral</button>
+        <button class="ampel-btn green"  onclick="setMood('green')">🙂 Grün – gut</button>
+      </div>
+      <div>
+        <h3>Letzte 7 Tage</h3>
+        <div class="ampel-history" id="ampelHistory"></div>
+      </div>
+    </section>
+
+    <!-- Hypnose-Player (aktuelles Video) -->
+    <section class="card">
+      <h2>🎧 Aktuelle Hypnose</h2>
+      <div class="embed">
+        <iframe id="player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+    </section>
+
+    <!-- Video-Liste -->
+    <section class="card">
+      <h2>Alle Hypnosen</h2>
+      <div class="videos" id="videos"></div>
+    </section>
+
+    <!-- Notizen -->
+    <section class="card">
+      <h2>📓 Notizen</h2>
+      <textarea id="noteInput" placeholder="Was nimmst du dir heute mit?"></textarea>
+      <div class="row">
+        <button class="btn" onclick="addNote()">Notiz speichern</button>
+        <button class="btn secondary" onclick="clearNotes()">Alle Notizen löschen</button>
+      </div>
+      <ul class="notes" id="notesList"></ul>
     </section>
   </main>
 
   <script>
+    // ----------------- Daten -----------------
     const videos = [
-      "https://www.youtube.com/embed/TNmqUFVOdko",
-      "https://www.youtube.com/embed/_PoGQQTh-Z0",
-      "https://www.youtube.com/embed/4zfKiGYrf1M"
+      { id: "TNmqUFVOdko", title: "Tiefenentspannung am Abend" },
+      { id: "_PoGQQTh-Z0", title: "Selbstvertrauen stärken" },
+      { id: "4zfKiGYrf1M", title: "Stress loslassen und Ruhe finden" }
     ];
 
-    function renderVideos() {
-      const container = document.getElementById('videos');
-      videos.forEach(url => {
-        const div = document.createElement('div');
-        div.className = 'video';
-        div.innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
-        container.appendChild(div);
-      });
+    const NOTES_KEY = 'notes';
+    const MOOD_KEY  = 'moodByDay'; // { 'yyyy-mm-dd': 'red'|'yellow'|'green' }
+    const CURRENT_KEY = 'currentVideo';
+
+    // ----------------- Helpers -----------------
+    const todayKey = (d=new Date()) => d.toISOString().slice(0,10);
+    const ytThumb = (id) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    const ytEmbed = (id) => `https://www.youtube.com/embed/${id}`;
+
+    // ----------------- Player & Videos -----------------
+    function setCurrent(id){
+      localStorage.setItem(CURRENT_KEY, id);
+      document.getElementById('player').src = ytEmbed(id);
+      // Scroll nach oben zum Player (mobil angenehmer)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function addNote() {
-      const noteInput = document.getElementById('noteInput');
-      const note = noteInput.value.trim();
-      if (note) {
-        const notesList = document.getElementById('notesList');
+    function renderVideos(){
+      const wrap = document.getElementById('videos');
+      wrap.innerHTML = '';
+      videos.forEach(v => {
+        const el = document.createElement('div');
+        el.className = 'video';
+        el.innerHTML = `
+          <img class="thumb" src="${ytThumb(v.id)}" alt="${v.title}" />
+          <div style="padding:10px">
+            <h3>${v.title}</h3>
+            <a class="btn" href="javascript:setCurrent('${v.id}')">Abspielen</a>
+          </div>
+        `;
+        wrap.appendChild(el);
+      });
+      const current = localStorage.getItem(CURRENT_KEY) || videos[0].id;
+      setCurrent(current);
+    }
+
+    // ----------------- Notizen -----------------
+    function loadNotes(){
+      const notes = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+      const ul = document.getElementById('notesList');
+      ul.innerHTML = '';
+      notes.forEach((t, i) => {
         const li = document.createElement('li');
-        li.textContent = note;
-        notesList.appendChild(li);
-        noteInput.value = "";
-        saveNotes();
+        li.innerHTML = `
+          <div class="row">
+            <span class="muted">${new Date().toLocaleDateString()}</span>
+            <button class="btn secondary" onclick="deleteNote(${i})">Löschen</button>
+          </div>
+          <div>${t}</div>
+        `;
+        ul.appendChild(li);
+      });
+    }
+    function addNote(){
+      const ta = document.getElementById('noteInput');
+      const val = ta.value.trim();
+      if(!val) return;
+      const list = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+      list.push(val);
+      localStorage.setItem(NOTES_KEY, JSON.stringify(list));
+      ta.value = '';
+      loadNotes();
+    }
+    function deleteNote(i){
+      const list = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+      list.splice(i,1);
+      localStorage.setItem(NOTES_KEY, JSON.stringify(list));
+      loadNotes();
+    }
+    function clearNotes(){
+      if(confirm('Alle Notizen wirklich löschen?')){
+        localStorage.removeItem(NOTES_KEY);
+        loadNotes();
       }
     }
 
-    function saveNotes() {
-      const notes = [];
-      document.querySelectorAll('#notesList li').forEach(li => {
-        notes.push(li.textContent);
-      });
-      localStorage.setItem('notes', JSON.stringify(notes));
+    // ----------------- Emotions-Ampel -----------------
+    function moodLabel(c){
+      return c==='red' ? 'Rot – belastet'
+           : c==='yellow' ? 'Gelb – neutral'
+           : c==='green' ? 'Grün – gut'
+           : 'Noch nichts erfasst';
+    }
+    function setMood(color){
+      const map = JSON.parse(localStorage.getItem(MOOD_KEY) || "{}");
+      map[todayKey()] = color;
+      localStorage.setItem(MOOD_KEY, JSON.stringify(map));
+      renderAmpel();
+    }
+    function renderAmpel(){
+      const map = JSON.parse(localStorage.getItem(MOOD_KEY) || "{}");
+      const cur = map[todayKey()];
+      const dot = document.getElementById('ampelDot');
+      const label = document.getElementById('ampelLabel');
+      dot.className = 'dot' + (cur ? ' ' + cur : '');
+      label.textContent = moodLabel(cur);
+
+      const hist = document.getElementById('ampelHistory');
+      hist.innerHTML = '';
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0,10);
+        const val = map[key];
+        const el = document.createElement('span');
+        el.className = 'badge';
+        const day = d.toLocaleDateString(undefined,{weekday:'short'});
+        el.innerHTML = `<span class="dot ${val||''}"></span>${day}`;
+        hist.appendChild(el);
+      }
     }
 
-    function loadNotes() {
-      const notes = JSON.parse(localStorage.getItem('notes') || "[]");
-      const notesList = document.getElementById('notesList');
-      notes.forEach(note => {
-        const li = document.createElement('li');
-        li.textContent = note;
-        notesList.appendChild(li);
-      });
-    }
-
+    // ----------------- PWA (Service Worker) -----------------
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
     }
 
+    // ----------------- Init -----------------
     renderVideos();
     loadNotes();
+    renderAmpel();
   </script>
 </body>
 </html>
+
