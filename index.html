@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hypnosen App</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" type="image/png" />
+  <meta name="theme-color" content="#d4af37" />
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+      background: #d4af37;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 1rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    .video {
+      margin-bottom: 1.5rem;
+    }
+    iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+    }
+    .note-section {
+      margin-top: 2rem;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      padding: 0.5rem;
+    }
+    button {
+      background: #d4af37;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    button:hover {
+      background: #b38f2e;
+    }
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      background: white;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Meine Hypnosen</h1>
+  </header>
+  <main>
+    <section id="videos"></section>
+
+    <section class="note-section">
+      <h2>Notizen</h2>
+      <textarea id="noteInput" placeholder="Deine Gedanken hier..."></textarea>
+      <br />
+      <button onclick="addNote()">Notiz speichern</button>
+      <ul id="notesList"></ul>
+    </section>
+  </main>
+
+  <script>
+    const videos = [
+      "https://www.youtube.com/embed/TNmqUFVOdko",
+      "https://www.youtube.com/embed/_PoGQQTh-Z0",
+      "https://www.youtube.com/embed/4zfKiGYrf1M"
+    ];
+
+    function renderVideos() {
+      const container = document.getElementById('videos');
+      videos.forEach(url => {
+        const div = document.createElement('div');
+        div.className = 'video';
+        div.innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
+        container.appendChild(div);
+      });
+    }
+
+    function addNote() {
+      const noteInput = document.getElementById('noteInput');
+      const note = noteInput.value.trim();
+      if (note) {
+        const notesList = document.getElementById('notesList');
+        const li = document.createElement('li');
+        li.textContent = note;
+        notesList.appendChild(li);
+        noteInput.value = "";
+        saveNotes();
+      }
+    }
+
+    function saveNotes() {
+      const notes = [];
+      document.querySelectorAll('#notesList li').forEach(li => {
+        notes.push(li.textContent);
+      });
+      localStorage.setItem('notes', JSON.stringify(notes));
+    }
+
+    function loadNotes() {
+      const notes = JSON.parse(localStorage.getItem('notes') || "[]");
+      const notesList = document.getElementById('notesList');
+      notes.forEach(note => {
+        const li = document.createElement('li');
+        li.textContent = note;
+        notesList.appendChild(li);
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+
+    renderVideos();
+    loadNotes();
+  </script>
+</body>
+</html>
